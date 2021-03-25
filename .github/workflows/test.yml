@@ -30,6 +30,9 @@ jobs:
           - latest
 
     steps:
+      - name: ACTIONS_ALLOW_UNSECURE_COMMANDS
+            id: ACTIONS_ALLOW_UNSECURE_COMMANDS
+            run: echo 'ACTIONS_ALLOW_UNSECURE_COMMANDS=true' >> $GITHUB_ENV
 
       - uses: actions/checkout@v2
 
@@ -110,16 +113,12 @@ jobs:
 
 
       - name: Set Raku install Path in Unix format
-        env:
-          ACTIONS_ALLOW_UNSECURE_COMMANDS: 'true'
         shell: bash
         run: |
           echo "::set-env name=RAKU_INSTALL_PATH::$HOME/raku-${{ env.RAKU_VERSION }}"
           echo "::set-env name=RAKU_INSTALL_PATH_UX::$HOME/raku-${{ env.RAKU_VERSION }}"
 
       - name: Set Raku install Path in Windows format
-        env:
-          ACTIONS_ALLOW_UNSECURE_COMMANDS: 'true'
         if: ${{ startsWith(matrix.os, 'windows') }}
         run: |
           echo "::set-env name=RAKU_INSTALL_PATH::$HOME\raku-${{ env.RAKU_VERSION }}"
@@ -151,8 +150,6 @@ jobs:
           fi
 
       - name: Get path data for Raku ${{ env.RAKU_VERSION }}
-        env:
-          ACTIONS_ALLOW_UNSECURE_COMMANDS: 'true'
         shell: bash
         run: |
           cd ${{ env.RAKU_INSTALL_PATH_UX }}

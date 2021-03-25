@@ -56,7 +56,7 @@ UTC by default, [Doc](https://developer.github.com/v3/#timezones)
 
  Builds the object with a particular role
 
-```
+```perl6
 my $gh = WebService::GitHub.new(
     with => ('Debug')
 );
@@ -92,7 +92,7 @@ Some of them are, or will be, included in the `examples` directory.
 
 #### get user info
 
-```
+```perl6
 my $gh = WebService::GitHub.new;
 my $user = $gh.request('/users/fayland').data;
 say $user<name>;
@@ -100,7 +100,7 @@ say $user<name>;
 
 #### search repositories
 
-```
+```perl6
 use WebService::GitHub::Search;
 
 my $search = WebService::GitHub::Search.new;
@@ -136,7 +136,7 @@ say $auth<token>;
 
 #### create a gist
 
-```
+```perl6
 use WebService::GitHub::Gist;
 
 my $gist = WebService::GitHub::Gist.new(
@@ -157,7 +157,7 @@ say $data<url>;
 
 #### update gist
 
-```
+```perl6
 $data = $gist.update_gist($id, {
     files => {
         "test_another.txt" => {
@@ -169,7 +169,7 @@ $data = $gist.update_gist($id, {
 
 #### delete gist
 
-```
+```perl6
 $res = $gist.delete_gist($id);
 say 'Deleted' if $res.is-success;
 ```

@@ -169,7 +169,7 @@ jobs:
       - name: Install module dependencies if not cached
         shell: bash
         if: steps.my-cache.outputs.cache-hit != 'true'
-        run:  zef install --deps-only .
+        run:  zef install --deps-only --/test .
 
       - name: Run module tests
         shell: bash

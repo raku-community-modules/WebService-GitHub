@@ -10,7 +10,11 @@
         "WebService::GitHub"          : "lib/WebService/GitHub.rakumod",
         "WebService::GitHub::Role"    : "lib/WebService/GitHub/Role.rakumod",
         "WebService::GitHub::Response": "lib/WebService/GitHub/Response.rakumod",
-        "WebService::GitHub::OAuth"   : "lib/WebService/GitHub/OAuth.rakumod"
+        "WebService::GitHub::OAuth"   : "lib/WebService/GitHub/OAuth.rakumod",
+        "WebService::GitHub::Users"     : "lib/WebService/GitHub/Users.rakumod",
+        "WebService::GitHub::Search"     : "lib/WebService/GitHub/Search.rakumod",
+        "WebService::GitHub::Issues"     : "lib/WebService/GitHub/Issues.rakumod",
+        "WebService::GitHub::Gist"     : "lib/WebService/GitHub/Gist.rakumod"
     },
     "source-url"    : "git://github.com/fayland/perl6-WebService-GitHub.git",
     "test-depends" : [ "Test::META" ]

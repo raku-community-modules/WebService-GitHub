@@ -4,8 +4,9 @@ use WebService::GitHub;
 use WebService::GitHub::Issues;
 
 ok(1);
+my $gh = WebService::GitHub.new;
 
-if ((%*ENV<TRAVIS> && rate-limit-remaining()) || %*ENV<GH_TOKEN>) {
+if ((%*ENV<TRAVIS> && $gh.rate-limit-remaining()) || %*ENV<GH_TOKEN>) {
     diag "running on travis or with token";
     my $gh = WebService::GitHub::Issues.new;
     my $issues = $gh.show(repo => 'fayland/perl6-WebService-GitHub').data;

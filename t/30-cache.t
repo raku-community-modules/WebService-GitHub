@@ -8,9 +8,9 @@ if (%*ENV<TRAVIS>) {
     my ($gh, $res, $user, $old_etag, $old_date);
 
     my $first-test = 0;
+    $gh = WebService::GitHub.new;
 
-    if rate-limit-remaining() {
-        $gh = WebService::GitHub.new;
+    if $gh.rate-limit-remaining() {
         $res = $gh.request('/users/fayland');
         $user = $res.data;
         is $user<login>, 'fayland', 'login ok';
@@ -20,7 +20,7 @@ if (%*ENV<TRAVIS>) {
         $first-test = 0
     }
 
-    if $first-test && rate-limit-remaining() {
+    if $first-test && $gh.rate-limit-remaining() {
         $res = $gh.request('/users/fayland');
         $user = $res.data;
         is $user<login>, 'fayland', 'login ok';

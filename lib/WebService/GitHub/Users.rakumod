@@ -9,15 +9,15 @@ class WebService::GitHub::Users does WebService::GitHub::Role {
     }
 
     method update(%data) {
-      self.request('/user', 'PATCH', :data(%data))
+      self.request('/user', 'PATCH', :%data)
     }
 
     method add_email(%data) {
-      self.request('/user/emails', 'POST', :data(%data));
+      self.request('/user/emails', 'POST', :%data);
     }
 
     method remove_email(%data) {
-      self.request('/user/emails', 'DELETE', :data(%data));
+      self.request('/user/emails', 'DELETE', :%data);
     }
 
     method followers($user?) {

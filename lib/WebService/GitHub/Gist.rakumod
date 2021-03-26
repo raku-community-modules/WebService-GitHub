@@ -20,11 +20,11 @@ class WebService::GitHub::Gist does WebService::GitHub::Role {
     }
 
     method create_gist(%data) {
-        self.request('/gists', 'POST', :data(%data));
+        self.request('/gists', 'POST', :%data);
     }
 
     method update_gist($id, %data) {
-        self.request('/gists/' ~ $id, 'PATCH', :data(%data));
+        self.request('/gists/' ~ $id, 'PATCH', :%data);
     }
 
     method delete_gist($id) {

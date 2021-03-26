@@ -1,6 +1,5 @@
 use v6;
 
-use WebService::GitHub;
 use WebService::GitHub::Role;
 
 class WebService::GitHub::Issues does WebService::GitHub::Role {
@@ -20,7 +19,7 @@ class WebService::GitHub::Issues does WebService::GitHub::Role {
         my @issues = self.show(:$repo, state => 'all').data.list;
         my @issue-data;
         for @issues -> $issue {
-            die "Limit exceeded, please use auth" if !rate-limit-remaining();
+            die "Limit exceeded, please use auth" if !self.rate-limit-remaining();
             my $this-issue = self.single-issue(:$repo, issue => $issue<number>).data;
             for $this-issue.kv -> $k, $value { # merge issues
                 if (!$issue{$k}) {

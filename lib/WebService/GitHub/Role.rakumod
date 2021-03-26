@@ -43,7 +43,7 @@ role WebService::GitHub::Role {
 
     submethod BUILD(*%args) {
         if %args<with>:exists {
-            for %args<with> -> $n {
+            for |%args<with> -> $n {
                 my $class = "WebService::GitHub::Role::$n";
                 require ::($class);
                 self does ::($class);
@@ -158,5 +158,12 @@ role WebService::GitHub::Role {
     }
     method handle_response($response) {
         return $response
+    }
+
+    method rate-limit-remaining(--> Str)  {
+        # make a "free" rate-limit request:
+        #   GET /rate_limit
+        my $resp = self.request('/rate_limit');
+        return $resp.x-ratelimit-remaining;
     }
 }

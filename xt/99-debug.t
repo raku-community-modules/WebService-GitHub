@@ -2,8 +2,8 @@ use Test;
 use WebService::GitHub;
 
 my $gh = WebService::GitHub.new(
-    with => ('Debug')
-);
+        with => ('Debug')
+        );
 
 # # enable debug
 # use WebService::GitHub::Role::Debug;

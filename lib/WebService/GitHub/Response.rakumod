@@ -1,6 +1,7 @@
 use v6;
 
-use JSON::Fast; # from-json
+use JSON::Fast;
+# from-json
 
 class WebService::GitHub::Response {
     has $.raw;
@@ -9,8 +10,12 @@ class WebService::GitHub::Response {
         from-json($.raw.content);
     }
 
-    method header(Str $field) { $!raw.field($field).Str }
-    method is-success { $!raw.is-success }
+    method header(Str $field) {
+        $!raw.field($field).Str
+    }
+    method is-success {
+        $!raw.is-success
+    }
 
     submethod get-link-header($rel) {
         state %link-header;
@@ -26,14 +31,28 @@ class WebService::GitHub::Response {
         return %link-header{$rel};
     }
 
-    method first-page-url { $.get-link-header('first') }
-    method prev-page-url  { $.get-link-header('prev')  }
-    method next-page-url  { $.get-link-header('next')  }
-    method last-page-url  { $.get-link-header('last')  }
+    method first-page-url {
+        $.get-link-header('first')
+    }
+    method prev-page-url {
+        $.get-link-header('prev')
+    }
+    method next-page-url {
+        $.get-link-header('next')
+    }
+    method last-page-url {
+        $.get-link-header('last')
+    }
 
-    method x-ratelimit-limit     { $.header('X-RateLimit-Limit')     }
-    method x-ratelimit-remaining { $.header('X-RateLimit-Remaining') }
-    method x-ratelimit-reset     { $.header('X-RateLimit-Reset')     }
+    method x-ratelimit-limit {
+        $.header('X-RateLimit-Limit')
+    }
+    method x-ratelimit-remaining {
+        $.header('X-RateLimit-Remaining')
+    }
+    method x-ratelimit-reset {
+        $.header('X-RateLimit-Reset')
+    }
 
     # has $.auto_pagination = 0;
     # method next {

@@ -5,16 +5,16 @@ die 'export GITHUB_ACCESS_TOKEN' unless %*ENV<GITHUB_ACCESS_TOKEN>;
 use WebService::GitHub;
 
 my $gh = WebService::GitHub.new(
-    access-token => %*ENV<GITHUB_ACCESS_TOKEN>
-);
+        access-token => %*ENV<GITHUB_ACCESS_TOKEN>
+        );
 
 my $res = $gh.request('/user');
 my $data = $res.data;
 diag $data.perl;
-ok( $data );
-ok( $data<id> );
-ok( $data<email> );
-ok( $data<login> );
-ok( $data<name> );
+ok($data);
+ok($data<id>);
+ok($data<email>);
+ok($data<login>);
+ok($data<name>);
 
 done-testing;

@@ -1,9 +1,9 @@
 sudo: false
 language: perl6
 perl6:
-    - latest
+  - latest
 
 install:
-    - rakudobrew build-zef
-    - zef --force install HTTP::UserAgent
-    - zef --deps-only install .
+  - rakudobrew build-zef
+  - zef --force install HTTP::UserAgent
+  - zef --deps-only install .

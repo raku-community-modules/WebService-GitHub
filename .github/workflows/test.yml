@@ -1,6 +1,6 @@
 name: Raku Caching Test
 
-on: [push, pull_request]
+on: [ push, pull_request ]
 
 jobs:
   build:
@@ -169,11 +169,11 @@ jobs:
       - name: Install module dependencies if not cached
         shell: bash
         if: steps.my-cache.outputs.cache-hit != 'true'
-        run:  zef install --deps-only --force .
+        run: zef install --deps-only --force .
 
       - name: Run module tests
         shell: bash
-        run:  |
+        run: |
           echo --verbose >.proverc
           echo --verbose >_proverc
           zef test --verbose .

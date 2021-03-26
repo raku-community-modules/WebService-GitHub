@@ -3,8 +3,8 @@ use WebService::GitHub::Users;
 die 'export GITHUB_ACCESS_TOKEN' unless %*ENV<GITHUB_ACCESS_TOKEN>;
 
 my $users = WebService::GitHub::Users.new(
-  access-token => %*ENV<GITHUB_ACCESS_TOKEN>
-);
+        access-token => %*ENV<GITHUB_ACCESS_TOKEN>
+        );
 
 ok($users);
 

@@ -12,17 +12,17 @@ class WebService::GitHub::OAuth does WebService::GitHub::Role {
     }
 
     method create_authorization(%data) {
-        self.request('/authorizations', 'POST', :data(%data));
+        self.request('/authorizations', 'POST', :%data);
     }
 
     method create_app_authorization($client_id, %data, :$fingerprint) {
         my $url = '/authorizations/clients/' ~ $client_id;
         $url = $url ~ '/' ~ $fingerprint if $fingerprint.defined;
-        self.request($url, 'PUT', :data(%data));
+        self.request($url, 'PUT', :%data);
     }
 
     method update_authorization($id, %data) {
-        self.request('/authorizations/' ~ $id, 'PATCH', :data(%data));
+        self.request('/authorizations/' ~ $id, 'PATCH', :%data);
     }
 
     method delete_authorization($id) {

@@ -5,7 +5,8 @@ use WebService::GitHub;
 
 my $search_json_file = $?FILE.IO.dirname ~ '/test_data/search.response';
 my $content = slurp $search_json_file;
-$content ~~ s:g/\r?\n/\r\n/; # dummy hack
+$content ~~ s:g/\r?\n/\r\n/;
+# dummy hack
 my $raw = HTTP::Response.new;
 $raw.parse($content);
 

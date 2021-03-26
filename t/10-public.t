@@ -1,9 +1,10 @@
-use Test; # -*- mode: perl6 -*-
+use Test;
+# -*- mode: perl6 -*-
 use WebService::GitHub;
 
 ok(1);
 
-if ((%*ENV<TRAVIS> && rate-limit-remaining()) || %*ENV<GH_TOKEN>  ) {
+if ((%*ENV<TRAVIS> && rate-limit-remaining()) || %*ENV<GH_TOKEN>) {
     diag "running on travis or with token";
     my $gh = WebService::GitHub.new;
     my $user = $gh.request('/users/fayland').data;

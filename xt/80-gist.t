@@ -5,8 +5,8 @@ die 'export GITHUB_ACCESS_TOKEN' unless %*ENV<GITHUB_ACCESS_TOKEN>;
 use WebService::GitHub::Gist;
 
 my $gist = WebService::GitHub::Gist.new(
-    access-token => %*ENV<GITHUB_ACCESS_TOKEN>
-);
+        access-token => %*ENV<GITHUB_ACCESS_TOKEN>
+        );
 
 my $res = $gist.create_gist({
     description => 'Test from perl6 WebService::GitHub::Gist',
@@ -18,7 +18,7 @@ my $res = $gist.create_gist({
     }
 });
 my $data = $res.data;
-ok( $data );
+ok($data);
 my $id = $data<id>;
 ok $data<description>;
 ok $data<public>;
@@ -34,7 +34,7 @@ $res = $gist.update_gist($id, {
     }
 });
 $data = $res.data;
-ok( $data );
+ok($data);
 is $data<id>, $id;
 ok index($data<files>{'test_another.txt'}<content>, 'Updated on').defined;
 

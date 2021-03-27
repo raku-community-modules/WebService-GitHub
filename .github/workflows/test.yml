@@ -15,7 +15,6 @@ jobs:
         # Full list https://docs.github.com/en/actions/reference/virtual-environments-for-github-hosted-runners
 
         os:
-          - macos-latest
           - ubuntu-latest
           - windows-latest
 

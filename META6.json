@@ -23,10 +23,14 @@
     "WebService::GitHub::Users": "lib/WebService/GitHub/Users.rakumod",
     "WebService::GitHub::Search": "lib/WebService/GitHub/Search.rakumod",
     "WebService::GitHub::Issues": "lib/WebService/GitHub/Issues.rakumod",
-    "WebService::GitHub::Gist": "lib/WebService/GitHub/Gist.rakumod"
+    "WebService::GitHub::Gist": "lib/WebService/GitHub/Gist.rakumod",
+    "WebService::GitHub::Gitignore": "lib/WebService/GitHub/Gitignore.rakumod",
+    "WebService::GitHub::Licenses": "lib/WebService/GitHub/Licenses.rakumod",
+    "WebService::GitHub::Emojis": "lib/WebService/GitHub/Emojis.rakumod"
   },
   "source-url": "git://github.com/fayland/perl6-WebService-GitHub.git",
   "test-depends": [
     "Test::META"
-  ]
+  ],
+  "license": "Artistic-2.0"
 }

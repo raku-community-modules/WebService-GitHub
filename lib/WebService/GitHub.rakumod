@@ -8,6 +8,8 @@ use WebService::GitHub::Search;
 use WebService::GitHub::Issues;
 use WebService::GitHub::Gitignore;
 use WebService::GitHub::Licenses;
+use WebService::GitHub::Emojis;
+
 class WebService::GitHub does WebService::GitHub::Role {
     # does WebService::GitHub::Role::Debug if %*ENV<DEBUG_GITHUB>;
 
@@ -35,6 +37,11 @@ class WebService::GitHub does WebService::GitHub::Role {
 
     method licenses() {
         state $obj = WebService::GitHub::Licenses.new: |self!attrs;
+        $obj;
+    }
+
+    method emojis() {
+        state $obj = WebService::GitHub::Emojis.new: |self!attrs;
         $obj;
     }
 

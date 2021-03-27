@@ -30,5 +30,6 @@
   "source-url": "git://github.com/fayland/perl6-WebService-GitHub.git",
   "test-depends": [
     "Test::META"
-  ]
+  ],
+  "license": "Artistic-2.0"
 }

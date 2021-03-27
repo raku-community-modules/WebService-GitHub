@@ -24,7 +24,7 @@
     "WebService::GitHub::Search": "lib/WebService/GitHub/Search.rakumod",
     "WebService::GitHub::Issues": "lib/WebService/GitHub/Issues.rakumod",
     "WebService::GitHub::Gist": "lib/WebService/GitHub/Gist.rakumod",
-    "WebService::GitHub::Gitignore": "lib/WebService/Github/Gitignore"
+    "WebService::GitHub::Gitignore": "lib/WebService/Github/Gitignore.rakumod"
   },
   "source-url": "git://github.com/fayland/perl6-WebService-GitHub.git",
   "test-depends": [

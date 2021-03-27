@@ -7,7 +7,7 @@ use WebService::GitHub::Users;
 use WebService::GitHub::Search;
 use WebService::GitHub::Issues;
 use WebService::GitHub::Gitignore;
-
+use WebService::GitHub::Licenses;
 class WebService::GitHub does WebService::GitHub::Role {
     # does WebService::GitHub::Role::Debug if %*ENV<DEBUG_GITHUB>;
 
@@ -30,6 +30,11 @@ class WebService::GitHub does WebService::GitHub::Role {
 
     method gitignore() {
         state $obj = WebService::GitHub::Gitignore.new: |self!attrs;
+        $obj;
+    }
+
+    method licenses() {
+        state $obj = WebService::GitHub::Licenses.new: |self!attrs;
         $obj;
     }
 

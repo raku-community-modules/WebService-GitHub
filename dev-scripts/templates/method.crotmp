@@ -1,0 +1,6 @@
+<:use 'param.crotmp'>
+<:sub method($method)>
+    method <$method.name>(<@$method.params: $param> <&param($param)>,</@> :%data<?$method.data-required>!</?>) {
+        <$method.code>
+    }
+</:>

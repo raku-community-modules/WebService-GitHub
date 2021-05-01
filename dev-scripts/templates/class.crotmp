@@ -1,0 +1,13 @@
+<:use 'method.crotmp'>
+<:sub rclass($class)>
+class <$class.name>  {
+    <@$class.bases: $base>
+    also does <$base>;
+    </@>
+    <@$class.methods: $method>
+<&method($method)>
+    </@>
+}
+</:>
+
+<&rclass(.class)>

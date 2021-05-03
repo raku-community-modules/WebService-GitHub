@@ -1,5 +1,9 @@
 <:use 'method.crotmp'>
 <:sub rclass($class)>
+<@$class.bases: $base>
+use <$base>;
+</@>
+
 class <$class.name>  {
     <@$class.bases: $base>
     also does <$base>;

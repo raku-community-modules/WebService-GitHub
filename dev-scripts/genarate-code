@@ -1,0 +1,180 @@
+#!/usr/bin/env perl6
+use OpenAPI::Model;
+use JSON::Fast;
+use Template::Mustache;
+use Cro::WebApp::Template::Repository;
+
+my $apij = from-json $*PROGRAM.add('../api.json').resolve.slurp;
+my $api = OpenAPI::Model.from-json($*PROGRAM.add('../api.json').resolve.slurp);
+
+my $template-repo = get-template-repository;
+$template-repo.add-location($*PROGRAM.add('../templates').resolve);
+
+class RakuParam {
+    has Str $.name;
+    has Str $.type;
+    has Str $.sigil = '$';
+    has Bool $.required;
+}
+
+class RakuMethod {
+    has Str $.name;
+    has RakuParam @.params;
+    has Str $.code;
+    has Bool $.data-required;
+}
+
+class RakuClass {
+    has RakuMethod @.methods;
+    has Str @.bases;
+    has Str $.name;
+    has Str $.pod;
+}
+my %classes;
+for $api.paths -> $paths {
+    for flat $paths.kv -> Str $path-template , $path {
+        for <get put post delete options head patch trace> -> $method {
+            with $path."$method"() -> $operation {
+                my $class-name = operation-class($operation,$path-template,$method);
+                my $data-required = False;
+                if $method ne 'get' && have-requestBody($operation) {
+                    my $c = $operation.request-body.content<application/json>;
+                    $data-required = $c.schema<required>.elems.Bool;
+                }
+                my $method-name = method-name($operation);
+                my $request-path = fix-path($path-template);
+                my @params = gen-params $operation.parameters;
+                my @params-code = @params>>.&param-code;
+                my $rmethod = RakuMethod.new(
+                        :name($method-name), :@params,
+                        :code("self.request(\"$request-path\",\"{ $method.uc }\",:%data)"),
+                        :$data-required);
+                my $pod = "=head2 { $operation.summary }\n=begin para\nSee L<{ $operation.operation-id }|{ $operation.external-docs.url // "https://docs.github.com/en/rest/reference/{ $operation.operation-id.split("/")[0] }" }> \n=end para\n";
+                $pod ~= '=begin code' ~ "\n";
+                $pod ~= "\t" ~ "$class-name." ~ $method-name ~ '( ' ~ @params-code.join(', ') ~ ' )' ~ "\n";
+                $pod ~= '=end code' ~ "\n";
+                %classes{$class-name}<pods>.push: $pod;
+                %classes{$class-name}<methods>.push: $rmethod;
+            }
+        }
+    }
+}
+for %classes.kv -> $class-name , %data {
+    my $class-path = get-class-path($class-name);
+    my $pod-path = get-class-path($class-name,'pod6');
+    my $class = RakuClass.new(:name($class-name),
+            :methods(|%data<methods>), :bases<WebService::GitHub::Role>);
+    my $code = class-code($class);
+    my $pod;
+    $pod ~= '=begin pod' ~ "\n";
+    $pod ~= '=head1 ' ~ "$class-name" ~ "\n";
+    $pod ~= %data<pods>[*].join("\n\n");
+    $pod ~= '=end pod' ~ "\n";
+    $class-path.parent.mkdir unless $class-path.parent.e;
+    $class-path.spurt($code);
+    $pod-path.spurt($pod);
+}
+say "Generated {%classes.elems} Classes";
+sub get-raku-type(Str $type) {
+    given $type {
+        when 'integer' {
+            'Int(Str)', '$';
+        }
+        when 'string' {
+            'Str', '$'
+        }
+        when 'boolean' {
+            'Bool', '$'
+        }
+        when 'number' {
+            'Num', '$'
+        }
+        when 'array' {
+            'List', '@'
+        }
+        when 'object' {
+            'Hash', '%'
+        }
+        default {
+            'Any', '$'
+        }
+    }
+}
+
+sub gen-params(@params) {
+    my @res;
+    for @params.grep(*.in eq 'path') -> $param {
+        my $name = $param.name.trans('_' => '-');
+        my ($type,$sigil);
+        if $param.schema<type>:exists {
+            ($type, $sigil) = get-raku-type($param.schema<type>)
+        } else {
+            ($type, $sigil) = 'Any', '$';
+        }
+        @res.push: RakuParam.new(
+                :$name,
+                :$type,
+                :required($param.required),
+                :$sigil
+                );
+    }
+    @res
+}
+
+sub fix-path(Str $path is copy) {
+    $path.match(/['{'(\w+)'}']+/, :global).map(-> $match {
+        $path .= subst($match.Str, '$' ~ $match[0].Str.trans('_' => '-'))
+    });
+    $path;
+}
+
+sub have-requestBody($operation) {
+    $operation.request-body.content<application/json>.defined;
+}
+
+sub method-name($operation) {
+    $operation.operation-id.split("/")[*- 1]
+}
+
+sub get-class-path($class-name,$ext = 'rakumod') {
+    my $path;
+    if $class-name.index('::') {
+        my $parts = $class-name.split('::');
+        $path = "..\\lib\\$parts[0 .. *- 2].join('\\')\\$parts[*- 1].$ext";
+    } else {
+        $path = "..\\lib\\$class-name.$ext";
+    }
+    $*PROGRAM.add($path).resolve
+}
+
+sub operation-class($opertaion,$path-template,$method) {
+    my $class-name;
+    my $usbcategory = $apij<paths>{$path-template}{$method}<x-github><subcategory> // '';
+    my $category = $apij<paths>{$path-template}{$method}<x-github><category>;
+    if $usbcategory && $usbcategory ne $category {
+        $class-name = ($category, $usbcategory)>>.&category-class.join('::');
+    } else {
+        $class-name = category-class($category);
+    }
+    $class-name;
+}
+
+sub category-class($category) {
+    $category.split("/")[0].split("-")>>.wordcase.join;
+}
+
+sub param-code(RakuParam $param) {
+    (await $template-repo.resolve('param.crotmp')).render({ :$param })
+}
+
+sub class-code(RakuClass $class) {
+    (await $template-repo.resolve('class.crotmp')).render({ :$class })
+}
+
+sub get-subname($param) {
+    $param.name.split("_")>>.wordcase.join
+}
+
+sub get-param-name($param) {
+    $param.name.trans('_' => '-')
+}

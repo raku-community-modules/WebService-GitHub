@@ -1,4 +1,6 @@
-#!/usr/bin/env perl6
+#!/usr/bin/env raku
+
+use v6.d;
 use OpenAPI::Model;
 use JSON::Fast;
 use Template::Mustache;
@@ -140,19 +142,19 @@ sub get-class-path($class-name,$ext = 'rakumod') {
     my $path;
     if $class-name.index('::') {
         my $parts = $class-name.split('::');
-        $path = "..\\lib\\$parts[0 .. *- 2].join('\\')\\$parts[*- 1].$ext";
+        $path = "../lib/".IO.add($parts[0 .. *- 2].join('/')).add("$parts[*- 1].$ext");
     } else {
-        $path = "..\\lib\\$class-name.$ext";
+        $path = "../lib/$class-name.$ext";
     }
     $*PROGRAM.add($path).resolve
 }
 
-sub operation-class($opertaion,$path-template,$method) {
+sub operation-class($operation,$path-template,$method) {
     my $class-name;
-    my $usbcategory = $apij<paths>{$path-template}{$method}<x-github><subcategory> // '';
+    my $subcategory = $apij<paths>{$path-template}{$method}<x-github><subcategory> // '';
     my $category = $apij<paths>{$path-template}{$method}<x-github><category>;
-    if $usbcategory && $usbcategory ne $category {
-        $class-name = ($category, $usbcategory)>>.&category-class.join('::');
+    if $subcategory && $subcategory ne $category {
+        $class-name = ($category, $subcategory)>>.&category-class.join('::');
     } else {
         $class-name = category-class($category);
     }

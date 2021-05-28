@@ -5,12 +5,17 @@ use OpenAPI::Model;
 use JSON::Fast;
 use Template::Mustache;
 use Cro::WebApp::Template::Repository;
+use PathTools;
 
 my $apij = from-json $*PROGRAM.add('../api.json').resolve.slurp;
 my $api = OpenAPI::Model.from-json($*PROGRAM.add('../api.json').resolve.slurp);
 
 my $template-repo = get-template-repository;
 $template-repo.add-location($*PROGRAM.add('../templates').resolve);
+
+my $static-file-dir = $*PROGRAM.add('../static/').resolve;
+
+my $output-lib-dir = $*PROGRAM.add('../../lib/').resolve;
 
 class RakuParam {
     has Str $.name;
@@ -95,6 +100,8 @@ for $api.paths -> $paths {
     }
 }
 
+rm($output-lib-dir, :r);
+
 for %classes.values -> $class {
     my $class-path = get-class-path($class.name);
     my $pod-path = get-class-path($class.name,'pod6');
@@ -117,6 +124,22 @@ say "Generated {%classes.elems} Classes";
 }
 say "Generated WebService::GitHub entry point class";
 
+{
+	my @todo = $static-file-dir.IO;
+    while @todo {
+        for @todo.pop.dir -> $path {
+            if $path.d {
+                @todo.push: $path;
+			}
+            else {
+                my $out-path = $output-lib-dir.IO.add($path.relative($static-file-dir));
+                $out-path.parent.mkdir unless $out-path.parent.e;
+                $path.copy($out-path);
+            }
+        }
+    }
+}
+say "Static files are copied over";
 
 sub get-raku-type($param, $class, $method) {
     if $param.schema<type>:!exists {
@@ -199,11 +222,11 @@ sub get-class-path($class-name,$ext = 'rakumod') {
     my $path;
     if $class-name.index('::') {
         my $parts = $class-name.split('::');
-        $path = "../lib/".IO.add($parts[0 .. *- 2].join('/')).add("$parts[*- 1].$ext");
+        $path = $output-lib-dir.IO.add($parts[0 .. *- 2].join('/')).add("$parts[*- 1].$ext");
     } else {
-        $path = "../lib/$class-name.$ext";
+        $path = $output-lib-dir.IO.add("$class-name.$ext");
     }
-    $*PROGRAM.add($path).resolve
+    $path.resolve
 }
 
 sub operation-class($operation,$path-template,$method) {

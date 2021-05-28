@@ -1,13 +1,6 @@
 **/.precomp
 *~
 .idea
-dev-scripts/lib/
 
 lib/*
-!lib/WebService/
-lib/WebService/*
-!lib/WebService/GitHub/
-lib/WebService/GitHub/*
-!lib/WebService/GitHub/Role/
-!lib/WebService/GitHub/Role.rakumod
 

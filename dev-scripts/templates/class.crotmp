@@ -1,7 +1,11 @@
 <:use 'method.crotmp'>
+<:use 'enum.crotmp'>
 <:sub rclass($class)>
 <@$class.bases: $base>
 use <$base>;
+</@>
+<@$class.enums: $enum>
+<&enum($enum)>
 </@>
 
 class <$class.name>  {
@@ -13,5 +17,4 @@ class <$class.name>  {
     </@>
 }
 </:>
-
 <&rclass(.class)>

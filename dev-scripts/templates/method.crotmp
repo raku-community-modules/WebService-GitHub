@@ -1,6 +1,15 @@
 <:use 'param.crotmp'>
 <:sub method($method)>
-    method <$method.name>(<@$method.params: $param> <&param($param)>,</@> :%data<?$method.data-required>!</?>) {
-        <$method.code>
+    method <$method.name>(<@$method.params: $param> <&param($param)>,</@>) {
+        <?$method.data-params>
+        my %data;
+        <@$method.data-params>
+        %data<<.api-name>> = $<.name><!.required> if defined $<.name></!>;
+        </@>
+        self.request("<$method.request-path>","<$method.request-method>", :%data)
+        </?>
+        <!$method.data-params>
+        self.request("<$method.request-path>","<$method.request-method>")
+        </!>
     }
 </:>

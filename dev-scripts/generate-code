@@ -14,58 +14,73 @@ $template-repo.add-location($*PROGRAM.add('../templates').resolve);
 
 class RakuParam {
     has Str $.name;
+    has Str $.api-name;
     has Str $.type;
     has Str $.sigil = '$';
     has Bool $.required;
+    has Bool $.in-data;
 }
 
 class RakuMethod {
     has Str $.name;
     has RakuParam @.params;
-    has Str $.code;
-    has Bool $.data-required;
+    has RakuParam @.data-params;
+    has Str @param-validations;
+    has Str $.request-path;
+    has Str $.request-method;
+}
+
+class RakuEnum {
+    has $.name;
+    has @.values;
 }
 
 class RakuClass {
+    has RakuEnum @.enums;
     has RakuMethod @.methods;
     has Str @.bases;
     has Str $.name;
     has Str $.pod;
 }
+
 my %classes;
+
 for $api.paths -> $paths {
     for flat $paths.kv -> Str $path-template , $path {
         for <get put post delete options head patch trace> -> $method {
             with $path."$method"() -> $operation {
                 my $class-name = operation-class($operation,$path-template,$method);
-                my $data-required = False;
-                if $method ne 'get' && have-requestBody($operation) {
-                    my $c = $operation.request-body.content<application/json>;
-                    $data-required = $c.schema<required>.elems.Bool;
-                }
                 my $method-name = method-name($operation);
                 my $request-path = fix-path($path-template);
-                my @params = gen-params $operation.parameters;
-                my @params-code = @params>>.&param-code;
+                my (@params, @enums) := gen-params $operation.parameters, $class-name, $method-name;
+                my @params-decl = @params>>.&param-decl;
                 my $rmethod = RakuMethod.new(
-                        :name($method-name), :@params,
-                        :code("self.request(\"$request-path\",\"{ $method.uc }\",:%data)"),
-                        :$data-required);
+                        :name($method-name),
+                        :@params,
+                        :data-params(@params.grep(*.in-data)),
+                        :$request-path,
+                        :request-method($method.uc));
                 my $pod = "=head2 { $operation.summary }\n=begin para\nSee L<{ $operation.operation-id }|{ $operation.external-docs.url // "https://docs.github.com/en/rest/reference/{ $operation.operation-id.split("/")[0] }" }> \n=end para\n";
                 $pod ~= '=begin code' ~ "\n";
-                $pod ~= "\t" ~ "$class-name." ~ $method-name ~ '( ' ~ @params-code.join(', ') ~ ' )' ~ "\n";
+                $pod ~= "\t" ~ "$class-name." ~ $method-name ~ '( ' ~ @params-decl.join(', ') ~ ' )' ~ "\n";
                 $pod ~= '=end code' ~ "\n";
                 %classes{$class-name}<pods>.push: $pod;
                 %classes{$class-name}<methods>.push: $rmethod;
+                %classes{$class-name}<enums>.append: @enums;
             }
         }
     }
 }
+
 for %classes.kv -> $class-name , %data {
     my $class-path = get-class-path($class-name);
     my $pod-path = get-class-path($class-name,'pod6');
-    my $class = RakuClass.new(:name($class-name),
-            :methods(|%data<methods>), :bases<WebService::GitHub::Role>);
+    my $class = RakuClass.new(
+            :name($class-name),
+            :methods(|%data<methods>),
+            :bases<WebService::GitHub::Role>,
+            :enums(|%data<enums>)
+        );
     my $code = class-code($class);
     my $pod;
     $pod ~= '=begin pod' ~ "\n";
@@ -76,51 +91,69 @@ for %classes.kv -> $class-name , %data {
     $class-path.spurt($code);
     $pod-path.spurt($pod);
 }
+
 say "Generated {%classes.elems} Classes";
-sub get-raku-type(Str $type) {
-    given $type {
-        when 'integer' {
-            'Int(Str)', '$';
-        }
-        when 'string' {
-            'Str', '$'
-        }
-        when 'boolean' {
-            'Bool', '$'
-        }
-        when 'number' {
-            'Num', '$'
-        }
-        when 'array' {
-            'List', '@'
-        }
-        when 'object' {
-            'Hash', '%'
-        }
-        default {
-            'Any', '$'
+
+sub get-raku-type($param, $class, $method) {
+    if $param.schema<type>:!exists {
+        'Any', '$'
+    }
+    else {
+        given $param.schema<type> {
+            when 'integer' {
+                'Int(Str)', '$';
+            }
+            when 'string' {
+                if $param.schema<enum>:exists {
+                    my $name = "{$class}::" ~ method-to-class-name($method) ~ method-to-class-name($param.name.split('_').map(*.tc).join);
+                    $name, '$', RakuEnum.new:
+                        name => $name,
+                        values => |$param.schema<enum>;
+                }
+                else {
+                    'Str', '$'
+                }
+            }
+            when 'boolean' {
+                'Bool', '$'
+            }
+            when 'number' {
+                'Num', '$'
+            }
+            when 'array' {
+                'List', '@'
+            }
+            when 'object' {
+                'Hash', '%'
+            }
+            default {
+                'Any', '$'
+            }
         }
     }
 }
 
-sub gen-params(@params) {
-    my @res;
-    for @params.grep(*.in eq 'path') -> $param {
+sub method-to-class-name($mname) {
+    $mname.split('-').map(*.tc).join
+}
+
+sub gen-params(@params, $class, $method) {
+    my @res-params;
+    my @enums;
+    for @params -> $param {
         my $name = $param.name.trans('_' => '-');
-        my ($type,$sigil);
-        if $param.schema<type>:exists {
-            ($type, $sigil) = get-raku-type($param.schema<type>)
-        } else {
-            ($type, $sigil) = 'Any', '$';
-        }
-        @res.push: RakuParam.new(
+        my ($type,$sigil,$enum) = get-raku-type($param, $class, $method);
+        @res-params.push: RakuParam.new(
                 :$name,
+                :api-name($param.name),
                 :$type,
                 :required($param.required),
-                :$sigil
+                :$sigil,
+                :in-data($param.in eq 'query')
                 );
+        @enums.push($enum) if $enum;
     }
-    @res
+    @res-params, @enums
 }
 
 sub fix-path(Str $path is copy) {
@@ -158,19 +191,23 @@ sub operation-class($operation,$path-template,$method) {
     } else {
         $class-name = category-class($category);
     }
-    $class-name;
+    'WebService::GitHub::' ~ $class-name
 }
 
 sub category-class($category) {
     $category.split("/")[0].split("-")>>.wordcase.join;
 }
 
-sub param-code(RakuParam $param) {
+sub param-decl(RakuParam $param) {
     (await $template-repo.resolve('param.crotmp')).render({ :$param })
 }
 
 sub class-code(RakuClass $class) {
     (await $template-repo.resolve('class.crotmp')).render({ :$class })
+}
+
+sub enum-code(RakuEnum $enum) {
+    (await $template-repo.resolve('enum.crotmp')).render({ :$enum })
 }
 
 sub get-subname($param) {

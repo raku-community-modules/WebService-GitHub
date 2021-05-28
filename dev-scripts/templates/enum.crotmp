@@ -1,0 +1,7 @@
+<:sub enum($enum)>
+enum <$enum.name> (
+    <@$enum.values : $val>
+    '<$val>',
+    </@>
+);
+</:>

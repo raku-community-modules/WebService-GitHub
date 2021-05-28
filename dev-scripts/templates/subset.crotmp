@@ -1,0 +1,3 @@
+<:sub subset($subset)>
+subset <$subset.name> of Str where subset-is * eq <$subset.junction>, '<$subset.name> must be either <$subset.alt-text>';
+</:>

@@ -1,11 +1,12 @@
 <:use 'method.crotmp'>
-<:use 'enum.crotmp'>
+<:use 'subset.crotmp'>
 <:sub rclass($class)>
+<?$class.subsets>use Subset::Helper;</?>
 <@$class.bases: $base>
 use <$base>;
 </@>
-<@$class.enums: $enum>
-<&enum($enum)>
+<@$class.subsets: $subset>
+<&subset($subset)>
 </@>
 
 class <$class.name>  {

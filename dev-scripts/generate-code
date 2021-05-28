@@ -30,17 +30,33 @@ class RakuMethod {
     has Str $.request-method;
 }
 
-class RakuEnum {
+class RakuSubset {
     has $.name;
     has @.values;
+    method junction() {
+        @!values.map({"'" ~ $_ ~ "'"}).join('|')
+    }
+    method alt-text() {
+        my @vals = @!values.map({'"' ~ $_ ~ '"'});
+        my $text;
+        if @vals.elems == 1 {
+           $text = @vals[0];
+        }
+        else {
+            $text = @vals[0..*-2].join(', ');
+            $text ~= ' or ' ~ @vals[*-1];
+        }
+        $text
+    }
 }
 
 class RakuClass {
-    has RakuEnum @.enums;
+    has RakuSubset @.subsets;
     has RakuMethod @.methods;
     has Str @.bases;
     has Str $.name;
-    has Str $.pod;
+    has Str $.class-method-name;
+    has Str @.pods;
 }
 
 my %classes;
@@ -49,14 +65,14 @@ for $api.paths -> $paths {
     for flat $paths.kv -> Str $path-template , $path {
         for <get put post delete options head patch trace> -> $method {
             with $path."$method"() -> $operation {
-                my $class-name = operation-class($operation,$path-template,$method);
+                my ($class-name, $class-method-name) = operation-class($operation,$path-template,$method);
                 my $method-name = method-name($operation);
                 my $request-path = fix-path($path-template);
-                my (@params, @enums) := gen-params $operation.parameters, $class-name, $method-name;
+                my (@params, @subsets) := gen-params $operation.parameters, $class-name, $method-name;
                 my @params-decl = @params>>.&param-decl;
                 my $rmethod = RakuMethod.new(
                         :name($method-name),
-                        :@params,
+                        :params(@params.sort(!*.required)),
                         :data-params(@params.grep(*.in-data)),
                         :$request-path,
                         :request-method($method.uc));
@@ -64,35 +80,43 @@ for $api.paths -> $paths {
                 $pod ~= '=begin code' ~ "\n";
                 $pod ~= "\t" ~ "$class-name." ~ $method-name ~ '( ' ~ @params-decl.join(', ') ~ ' )' ~ "\n";
                 $pod ~= '=end code' ~ "\n";
-                %classes{$class-name}<pods>.push: $pod;
-                %classes{$class-name}<methods>.push: $rmethod;
-                %classes{$class-name}<enums>.append: @enums;
+                unless %classes{$class-name}:exists {
+                    %classes{$class-name} = RakuClass.new(
+                            :name($class-name),
+                            :$class-method-name,
+                            :bases<WebService::GitHub::Role>,
+                        );
+                }
+                %classes{$class-name}.pods.push: $pod;
+                %classes{$class-name}.methods.push: $rmethod;
+                %classes{$class-name}.subsets.append: @subsets;
             }
         }
     }
 }
 
-for %classes.kv -> $class-name , %data {
-    my $class-path = get-class-path($class-name);
-    my $pod-path = get-class-path($class-name,'pod6');
-    my $class = RakuClass.new(
-            :name($class-name),
-            :methods(|%data<methods>),
-            :bases<WebService::GitHub::Role>,
-            :enums(|%data<enums>)
-        );
+for %classes.values -> $class {
+    my $class-path = get-class-path($class.name);
+    my $pod-path = get-class-path($class.name,'pod6');
     my $code = class-code($class);
     my $pod;
     $pod ~= '=begin pod' ~ "\n";
-    $pod ~= '=head1 ' ~ "$class-name" ~ "\n";
-    $pod ~= %data<pods>[*].join("\n\n");
+    $pod ~= '=head1 ' ~ $class.name ~ "\n";
+    $pod ~= $class.pods[*].join("\n\n");
     $pod ~= '=end pod' ~ "\n";
     $class-path.parent.mkdir unless $class-path.parent.e;
     $class-path.spurt($code);
     $pod-path.spurt($pod);
 }
-
 say "Generated {%classes.elems} Classes";
+
+{
+    my $code = github-code(%classes.values);
+    my $class-path = get-class-path('WebService::GitHub');
+    $class-path.spurt($code);
+}
+say "Generated WebService::GitHub entry point class";
+
 
 sub get-raku-type($param, $class, $method) {
     if $param.schema<type>:!exists {
@@ -106,9 +130,9 @@ sub get-raku-type($param, $class, $method) {
             when 'string' {
                 if $param.schema<enum>:exists {
                     my $name = "{$class}::" ~ method-to-class-name($method) ~ method-to-class-name($param.name.split('_').map(*.tc).join);
-                    $name, '$', RakuEnum.new:
+                    $name, '$', RakuSubset.new:
                         name => $name,
-                        values => |$param.schema<enum>;
+                        values => |$param.schema<enum>.grep(* ne '');
                 }
                 else {
                     'Str', '$'
@@ -139,10 +163,10 @@ sub method-to-class-name($mname) {
 
 sub gen-params(@params, $class, $method) {
     my @res-params;
-    my @enums;
+    my @subsets;
     for @params -> $param {
         my $name = $param.name.trans('_' => '-');
-        my ($type,$sigil,$enum) = get-raku-type($param, $class, $method);
+        my ($type,$sigil,$subset) = get-raku-type($param, $class, $method);
         @res-params.push: RakuParam.new(
                 :$name,
                 :api-name($param.name),
@@ -151,9 +175,9 @@ sub gen-params(@params, $class, $method) {
                 :$sigil,
                 :in-data($param.in eq 'query')
                 );
-        @enums.push($enum) if $enum;
+        @subsets.push($subset) if $subset;
     }
-    @res-params, @enums
+    @res-params, @subsets
 }
 
 sub fix-path(Str $path is copy) {
@@ -191,7 +215,8 @@ sub operation-class($operation,$path-template,$method) {
     } else {
         $class-name = category-class($category);
     }
-    'WebService::GitHub::' ~ $class-name
+    my $class-method = $class-name.trans(['::'] => ['-']).lc;
+    'WebService::GitHub::' ~ $class-name, $class-method
 }
 
 sub category-class($category) {
@@ -206,8 +231,12 @@ sub class-code(RakuClass $class) {
     (await $template-repo.resolve('class.crotmp')).render({ :$class })
 }
 
-sub enum-code(RakuEnum $enum) {
-    (await $template-repo.resolve('enum.crotmp')).render({ :$enum })
+sub github-code(@classes) {
+    (await $template-repo.resolve('GitHub.crotmp')).render({ :@classes })
+}
+
+sub subset-code(RakuSubset $subset) {
+    (await $template-repo.resolve('subset.crotmp')).render({ :$subset })
 }
 
 sub get-subname($param) {

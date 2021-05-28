@@ -4,7 +4,7 @@
         <?$method.data-params>
         my %data;
         <@$method.data-params>
-        %data<<.api-name>> = $<.name><!.required> if defined $<.name></!>;
+        %data<<.api-name>> = <.sigil><.name><!.required> if defined <.sigil><.name></!>;
         </@>
         self.request("<$method.request-path>","<$method.request-method>", :%data)
         </?>

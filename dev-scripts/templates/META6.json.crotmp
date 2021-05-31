@@ -1,0 +1,33 @@
+<:sub meta6($meta6)>
+{
+  "perl": "6.d",
+  "name": "WebService::GitHub",
+  "version": "<$meta6.version>",
+  "authors": [
+    "github:fayland"
+  ],
+  "description": "GitHub API",
+  "depends": [
+    "MIME::Base64",
+    "URI",
+    "IO::Socket::SSL",
+    "HTTP::UserAgent",
+    "JSON::Fast",
+    "Cache::LRU",
+    "Subset::Helper"
+  ],
+  "source-url": "git://github.com/fayland/perl6-WebService-GitHub.git",
+  "test-depends": [
+    "Test::META"
+  ],
+  "license": "Artistic-2.0",
+  "provides": {
+    <@$meta6.classes : $class>
+    "<$class.module>": "<$class.path>",
+    </@>
+    "WebService::GitHub::Role": "lib/WebService/GitHub/Role.rakumod",
+    "WebService::GitHub": "lib/WebService/GitHub.rakumod"
+  }
+}
+</:>
+<&meta6(.meta6)>

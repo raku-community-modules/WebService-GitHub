@@ -7,6 +7,8 @@ use Template::Mustache;
 use Cro::WebApp::Template::Repository;
 use PathTools;
 
+my $version = '0.1.1';
+
 my $apij = from-json $*PROGRAM.add('../api.json').resolve.slurp;
 my $api = OpenAPI::Model.from-json($*PROGRAM.add('../api.json').resolve.slurp);
 
@@ -14,8 +16,8 @@ my $template-repo = get-template-repository;
 $template-repo.add-location($*PROGRAM.add('../templates').resolve);
 
 my $static-file-dir = $*PROGRAM.add('../static/').resolve;
-
-my $output-lib-dir = $*PROGRAM.add('../../lib/').resolve;
+my $output-dir      = $*PROGRAM.add('../../gen/').resolve;
+my $output-lib-dir  = $output-dir.add('lib/').resolve;
 
 class RakuParam {
     has Str $.name;
@@ -65,7 +67,6 @@ class RakuClass {
 }
 
 my %classes;
-
 for $api.paths -> $paths {
     for flat $paths.kv -> Str $path-template , $path {
         for <get put post delete options head patch trace> -> $method {
@@ -100,7 +101,8 @@ for $api.paths -> $paths {
     }
 }
 
-rm($output-lib-dir, :r);
+rm($output-dir, :r);
+$output-dir.mkdir;
 
 for %classes.values -> $class {
     my $class-path = get-class-path($class.name);
@@ -125,6 +127,20 @@ say "Generated {%classes.elems} Classes";
 say "Generated WebService::GitHub entry point class";
 
 {
+    my @meta6-classes;
+    for %classes.values {
+        @meta6-classes.push: %(
+            module => $_.name,
+            path   => get-class-path($_.name).relative($output-dir),
+        )
+    }
+    my $code = meta6-code(@meta6-classes, $version);
+    my $path = $output-dir.IO.add('META6.json');
+    $path.spurt($code);
+}
+say "Generated META6.json";
+
+{
 	my @todo = $static-file-dir.IO;
     while @todo {
         for @todo.pop.dir -> $path {
@@ -132,7 +148,7 @@ say "Generated WebService::GitHub entry point class";
                 @todo.push: $path;
 			}
             else {
-                my $out-path = $output-lib-dir.IO.add($path.relative($static-file-dir));
+                my $out-path = $output-dir.IO.add($path.relative($static-file-dir));
                 $out-path.parent.mkdir unless $out-path.parent.e;
                 $path.copy($out-path);
             }
@@ -256,6 +272,13 @@ sub class-code(RakuClass $class) {
 
 sub github-code(@classes) {
     (await $template-repo.resolve('GitHub.crotmp')).render({ :@classes })
+}
+
+sub meta6-code(@classes, $version) {
+    (await $template-repo.resolve('META6.json.crotmp')).render({ meta6 => {
+        :@classes,
+        :$version
+    }})
 }
 
 sub subset-code(RakuSubset $subset) {

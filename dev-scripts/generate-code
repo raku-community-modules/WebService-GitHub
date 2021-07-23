@@ -75,6 +75,11 @@ for $api.paths -> $paths {
                 my $method-name = method-name($operation);
                 my $request-path = fix-path($path-template);
                 my (@params, @subsets) := gen-params $operation.parameters, $class-name, $method-name;
+                if have-requestBody($operation) {
+                    my (@body-params, @body-subsets) := gen-body-params $operation.request-body.content<application/json>.schema, $class-name, $method-name;
+                    @params.append(@body-params);
+                    @subsets.append(@body-subsets);
+                }
                 my @params-decl = @params>>.&param-decl;
                 my $rmethod = RakuMethod.new(
                         :name($method-name),
@@ -196,6 +201,45 @@ sub get-raku-type($param, $class, $method) {
     }
 }
 
+sub get-raku-type-for-body-param($name, %config, $class, $method) {
+    if %config<type>:!exists {
+        'Any', '$'
+    }
+    else {
+        given %config<type> {
+            when 'integer' {
+                'Int(Str)', '$';
+            }
+            when 'string' {
+                if %config<enum>:exists {
+                    my $full-name = "{$class}::" ~ method-to-class-name($method) ~ method-to-class-name($name.split('_').map(*.tc).join);
+                    $full-name, '$', RakuSubset.new:
+                        name => $full-name,
+                        values => |%config<enum>.grep(* ne '');
+                }
+                else {
+                    'Str', '$'
+                }
+            }
+            when 'boolean' {
+                'Bool', '$'
+            }
+            when 'number' {
+                'Num', '$'
+            }
+            when 'array' {
+                'List', '@'
+            }
+            when 'object' {
+                'Hash', '%'
+            }
+            default {
+                'Any', '$'
+            }
+        }
+    }
+}
+
 sub method-to-class-name($mname) {
     $mname.split('-').map(*.tc).join
 }
@@ -213,6 +257,25 @@ sub gen-params(@params, $class, $method) {
                 :required($param.required),
                 :$sigil,
                 :in-data($param.in eq 'query')
+                );
+        @subsets.push($subset) if $subset;
+    }
+    @res-params, @subsets
+}
+
+sub gen-body-params(%schema, $class, $method) {
+    my @res-params;
+    my @subsets;
+    for %schema<properties>.kv -> $api-name, %config {
+        my $name = $api-name.trans('_' => '-');
+        my ($type,$sigil,$subset) = get-raku-type-for-body-param($api-name, %config, $class, $method);
+        @res-params.push: RakuParam.new(
+                :$name,
+                :$api-name,
+                :$type,
+                :required($api-name (elem) %schema<required>),
+                :$sigil,
+                :in-data
                 );
         @subsets.push($subset) if $subset;
     }

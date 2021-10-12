@@ -26,6 +26,7 @@
     "<$class.module>": "<$class.path>",
     </@>
     "WebService::GitHub::Role": "lib/WebService/GitHub/Role.rakumod",
+    "WebService::GitHub::Response": "lib/WebService/GitHub/Response.rakumod",
     "WebService::GitHub": "lib/WebService/GitHub.rakumod"
   }
 }

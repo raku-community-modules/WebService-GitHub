@@ -9,6 +9,7 @@ use Cache::LRU;
 use HTTP::Request;
 use HTTP::UserAgent;
 use WebService::GitHub::Response;
+use WebService::GitHub::AppAuth;
 
 class X::WebService::GitHub is Exception {
     has $.reason;
@@ -20,9 +21,14 @@ class X::WebService::GitHub is Exception {
 
 role WebService::GitHub::Role {
     has $.endpoint = 'https://api.github.com';
-    has $.access-token = %*ENV<GH_TOKEN>;
-    has $.auth_login;
-    has $.auth_password;
+
+    has $!pat is built = %*ENV<GH_TOKEN>;
+    # or
+    has $!auth-login is built;
+    has $!auth-token is built;
+    # or
+    has WebService::GitHub::AppAuth $!app-auth is built;
+    has $!install-id is built;
 
     has $.useragent = 'perl6-WebService-GitHub/0.1.0';
     has $.ua = HTTP::UserAgent.new;
@@ -41,7 +47,7 @@ role WebService::GitHub::Role {
     has @.with = ();
     has %.role_data;
 
-    submethod BUILD(*%args) {
+    submethod TWEAK(*%args) {
         if %args<with>:exists {
             for |%args<with> -> $n {
                 my $class = "WebService::GitHub::Role::$n";
@@ -49,17 +55,8 @@ role WebService::GitHub::Role {
                 self does ::($class);
             }
         }
-
-        for %args.kv -> $k , $v {
-            self.^attributes.first(*.Str eq '$!' ~ $k).set_value(self, $v)
-        }
-        #        # backwards
-        #        $!access-token  = %args<access-token>  if %args<access-token>:exists;
-        #        $!auth_login    = %args<auth_login>    if %args<auth_login>:exists;
-        #        $!auth_password = %args<auth_password> if %args<auth_password>:exists;
-        #        $!endpoint      = %args<endpoint>      if %args<endpoint>:exists;
     }
-
+    
     method request(Str $path, $method= 'GET', :%data is copy) {
         my $url = $.endpoint ~ $path;
         if ($method eq 'GET') {
@@ -87,14 +84,18 @@ role WebService::GitHub::Role {
                     );
         }
 
-        if $.auth_login.defined && $.auth_password.defined {
+        if $!auth-login.defined && $!auth-token.defined {
             $request.header.field(
-                    Authorization => "Basic " ~ MIME::Base64.encode-str("{ $.auth_login }:{ $.auth_password }")
-                    );
-        } elsif ($.access-token) {
+                Authorization => "Basic " ~ MIME::Base64.encode-str("{ $!auth-login }:{ $!auth-token }")
+            );
+        } elsif $!pat {
             $request.header.field(
-                    Authorization => "token " ~ $.access-token
-                    );
+                Authorization => "token " ~ $!pat
+            );
+        } elsif $!install-id {
+            $request.header.field(
+                Authorization => $!app-auth.get-installation-auth($!install-id)
+            );
         }
 
         if ($method ne 'GET' and %data) {

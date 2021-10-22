@@ -27,7 +27,8 @@
     </@>
     "WebService::GitHub::Role": "lib/WebService/GitHub/Role.rakumod",
     "WebService::GitHub::Response": "lib/WebService/GitHub/Response.rakumod",
-    "WebService::GitHub": "lib/WebService/GitHub.rakumod"
+    "WebService::GitHub": "lib/WebService/GitHub.rakumod",
+    "WebService::GitHub::AppAuth": "lib/WebService/GitHub/AppAuth.rakumod",
   }
 }
 </:>

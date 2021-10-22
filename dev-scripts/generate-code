@@ -77,7 +77,11 @@ for $api.paths -> $paths {
                 my (@params, @subsets) := gen-params $operation.parameters, $class-name, $method-name;
                 if have-requestBody($operation) {
                     my (@body-params, @body-subsets) := gen-body-params $operation.request-body.content<application/json>.schema, $class-name, $method-name;
-                    @params.append(@body-params);
+                    for @body-params -> $param {
+                        if !@params.first({ $_.api-name eq $param.api-name }) {
+                            @params.push: $param;
+                        }
+                    }
                     @subsets.append(@body-subsets);
                 }
                 my @params-decl = @params>>.&param-decl;

@@ -1,6 +1,6 @@
 <:use 'param.crotmp'>
 <:sub method($method)>
-    method <$method.name>(<@$method.params: $param> <&param($param)>,</@>) {
+    method <$method.name>(<@$method.params: $param><&param($param)><:separator>, </:></@>) {
         <?$method.data-params>
         my %data;
         <@$method.data-params>

@@ -13,7 +13,7 @@ my $apij = from-json $*PROGRAM.add('../api.json').resolve.slurp;
 my $api = OpenAPI::Model.from-json($*PROGRAM.add('../api.json').resolve.slurp);
 
 my $template-repo = get-template-repository;
-$template-repo.add-location($*PROGRAM.add('../templates').resolve);
+$template-repo.add-global-location($*PROGRAM.add('../templates').resolve);
 
 my $static-file-dir = $*PROGRAM.add('../static/').resolve;
 my $output-dir      = $*PROGRAM.add('../../gen/').resolve;

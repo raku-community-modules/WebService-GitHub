@@ -1,0 +1,18 @@
+{
+  "perl": "6.d",
+  "name": "GitHub API generator script",
+  "version": "1.0.0",
+  "authors": [
+    "Khalid Mohamed Elborai",
+    "Patrick Böker"
+  ],
+  "description": "GitHub API generator script",
+  "depends": [
+    "OpenAPI::Model:ver<1.0.4>",
+    "JSON::Fast:ver<0.16>",
+    "Cro::WebApp::Template::Repository:ver<0.8.7>",
+    "PathTools:ver<0.1.1>"
+  ],
+  "source-url": "git://github.com/fayland/perl6-WebService-GitHub.git",
+  "license": "Artistic-2.0"
+}

@@ -1,1 +1,1 @@
-<:sub param($param)><?$param.type><$param.type> </?><!$param.required>:</!><$param.sigil><$param.name></:> <?.param><&param(.param)></?>
+<:sub param($param)><?$param.type><$param.type> </?><?$param.named>:</?><$param.sigil><$param.name><?{ $param.named && $param.required }>!</?><?{ $param.named == False && $param.required == False}>?</?></:> <?.param><&param(.param)></?>

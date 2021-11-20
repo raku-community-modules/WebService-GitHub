@@ -23,6 +23,7 @@ class RakuParam {
     has Str $.api-name;
     has Str $.type;
     has Str $.sigil = '$';
+    has Bool $.named;
     has Bool $.required;
     has Bool $.in-data;
 }
@@ -34,6 +35,7 @@ class RakuMethod {
     has Str @param-validations;
     has Str $.request-path;
     has Str $.request-method;
+    has Str $.pod;
 }
 
 class RakuSubset {
@@ -62,7 +64,11 @@ class RakuClass {
     has Str @.bases;
     has Str $.name;
     has Str $.class-method-name;
-    has Str @.pods;
+
+    method sort() {
+        @!subsets .= sort( *.name );
+        @!methods .= sort( *.name );
+    }
 }
 
 my %classes;
@@ -84,16 +90,17 @@ for $api.paths -> $paths {
                     @subsets.append(@body-subsets);
                 }
                 my @params-decl = @params>>.&param-decl;
-                my $rmethod = RakuMethod.new(
-                        :name($method-name),
-                        :params(@params.sort(!*.required)),
-                        :data-params(@params.grep(*.in-data)),
-                        :$request-path,
-                        :request-method($method.uc));
                 my $pod = "=head2 { $operation.summary }\n=begin para\nSee L<{ $operation.operation-id }|{ $operation.external-docs.url // "https://docs.github.com/en/rest/reference/{ $operation.operation-id.split("/")[0] }" }> \n=end para\n";
                 $pod ~= '=begin code' ~ "\n";
                 $pod ~= "\t" ~ "$class-name." ~ $method-name ~ '( ' ~ @params-decl.join(', ') ~ ' )' ~ "\n";
                 $pod ~= '=end code' ~ "\n";
+                my $rmethod = RakuMethod.new(
+                        :name($method-name),
+                        :params(@params.sort({ .named, !.required })),
+                        :data-params(@params.grep(*.in-data)),
+                        :$request-path,
+                        :request-method($method.uc),
+                        :$pod);
                 unless %classes{$class-name}:exists {
                     %classes{$class-name} = RakuClass.new(
                             :name($class-name),
@@ -101,13 +108,14 @@ for $api.paths -> $paths {
                             :bases<WebService::GitHub::Role>,
                         );
                 }
-                %classes{$class-name}.pods.push: $pod;
                 %classes{$class-name}.methods.push: $rmethod;
                 %classes{$class-name}.subsets.append: @subsets;
             }
         }
     }
 }
+
+.sort for %classes.values;
 
 rm($output-dir, :r);
 $output-dir.mkdir;
@@ -119,7 +127,7 @@ for %classes.values -> $class {
     my $pod;
     $pod ~= '=begin pod' ~ "\n";
     $pod ~= '=head1 ' ~ $class.name ~ "\n";
-    $pod ~= $class.pods[*].join("\n\n");
+    $pod ~= $class.methods.map(*.pod).join("\n\n");
     $pod ~= '=end pod' ~ "\n";
     $class-path.parent.mkdir unless $class-path.parent.e;
     $class-path.spurt($code);
@@ -257,7 +265,8 @@ sub gen-params(@params, $class, $method) {
                 :$name,
                 :api-name($param.name),
                 :$type,
-                :required($param.required),
+                :named(!so $param.required),
+                :required(so $param.required),
                 :$sigil,
                 :in-data($param.in eq 'query')
                 );
@@ -276,6 +285,7 @@ sub gen-body-params(%schema, $class, $method) {
                 :$name,
                 :$api-name,
                 :$type,
+                :named,
                 :required($api-name (elem) %schema<required>),
                 :$sigil,
                 :in-data

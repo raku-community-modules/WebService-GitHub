@@ -193,13 +193,13 @@ sub get-raku-type($param, $class, $method) {
                 'Num', '$'
             }
             when 'array' {
-                'List', '@'
+                '', '@'
             }
             when 'object' {
-                'Hash', '%'
+                '', '%'
             }
             default {
-                'Any', '$'
+                '', '$'
             }
         }
     }
@@ -207,7 +207,7 @@ sub get-raku-type($param, $class, $method) {
 
 sub get-raku-type-for-body-param($name, %config, $class, $method) {
     if %config<type>:!exists {
-        'Any', '$'
+        '', '$'
     }
     else {
         given %config<type> {
@@ -232,13 +232,13 @@ sub get-raku-type-for-body-param($name, %config, $class, $method) {
                 'Num', '$'
             }
             when 'array' {
-                'List', '@'
+                '', '@'
             }
             when 'object' {
-                'Hash', '%'
+                '', '%'
             }
             default {
-                'Any', '$'
+                '', '$'
             }
         }
     }

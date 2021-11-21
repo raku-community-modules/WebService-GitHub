@@ -200,10 +200,10 @@ sub get-raku-type($param, $class, $method) {
                 'Num', '$'
             }
             when 'array' {
-                '', '@'
+                'Positional', '$'
             }
             when 'object' {
-                '', '%'
+                'Associative', '$'
             }
             default {
                 '', '$'
@@ -239,10 +239,10 @@ sub get-raku-type-for-body-param($name, %config, $class, $method) {
                 'Num', '$'
             }
             when 'array' {
-                '', '@'
+                'Positional', '$'
             }
             when 'object' {
-                '', '%'
+                'Associative', '$'
             }
             default {
                 '', '$'

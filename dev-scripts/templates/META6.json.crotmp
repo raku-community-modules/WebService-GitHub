@@ -1,26 +1,29 @@
 <:sub meta6($meta6)>
 {
-  "perl": "6.d",
   "name": "WebService::GitHub",
-  "version": "<$meta6.version>",
-  "authors": [
-    "github:fayland"
-  ],
   "description": "GitHub API",
-  "depends": [
-    "MIME::Base64",
-    "URI",
-    "IO::Socket::SSL",
-    "HTTP::UserAgent",
-    "JSON::Fast",
-    "Cache::LRU",
-    "Subset::Helper"
-  ],
-  "source-url": "git://github.com/fayland/perl6-WebService-GitHub.git",
-  "test-depends": [
-    "Test::META"
-  ],
+  "version": "<$meta6.version>",
+  "api": 1,
+  "auth": "zef:raku-community-modules",
   "license": "Artistic-2.0",
+  "raku": "6.d",
+  "source-url": "https://github.com/raku-community-modules/WebService-GitHub.git",
+  "authors": [
+    "Fayland Lam",
+    "Khalid Mohamed Elborai",
+    "Patrick Böker"
+  ],
+  "depends": [
+    "MIME::Base64:ver<1.2.3>:auth<zef:raku-community-modules>",
+    "URI:ver<0.3.5>",
+    "HTTP::UserAgent:ver<1.1.51>:auth<github:sergot>",
+    "JSON::Fast:ver<0.17>:auth<cpan:TIMOTIMO>",
+    "Cache::LRU:ver<0.1.0>",
+    "Subset::Helper:ver<1.001002>:auth<zef:raku-community-modules>"
+  ],
+  "test-depends": [
+    "Test::META:ver<0.0.17>:auth<github:jonathanstowe>:api<1.0>"
+  ],
   "provides": {
     <@$meta6.classes : $class>
     "<$class.module>": "<$class.path>",

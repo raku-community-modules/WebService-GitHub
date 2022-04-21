@@ -28,9 +28,11 @@
     <@$meta6.classes : $class>
     "<$class.module>": "<$class.path>",
     </@>
-    "WebService::GitHub::Role": "lib/WebService/GitHub/Role.rakumod",
-    "WebService::GitHub::Response": "lib/WebService/GitHub/Response.rakumod",
     "WebService::GitHub": "lib/WebService/GitHub.rakumod",
+    "WebService::GitHub::Role": "lib/WebService/GitHub/Role.rakumod",
+    "WebService::GitHub::Role::CustomUserAgent": "lib/WebService/GitHub/Role/CustomUserAgent.rakumod",
+    "WebService::GitHub::Role::Debug": "lib/WebService/GitHub/Role/Debug.rakumod",
+    "WebService::GitHub::Response": "lib/WebService/GitHub/Response.rakumod",
     "WebService::GitHub::AppAuth": "lib/WebService/GitHub/AppAuth.rakumod",
     "WebService::GitHub::GraphQL": "lib/WebService/GitHub/GraphQL.rakumod"
   }

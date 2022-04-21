@@ -9,12 +9,12 @@ my $github = WebService::GitHub.new;
 if ((%*ENV<TRAVIS> && $github.rate-limit-remaining()) || %*ENV<GH_TOKEN>) {
     diag "running on travis or with token";
     my $gh = WebService::GitHub::Issues.new;
-    my $issues = $gh.show(repo => 'fayland/perl6-WebService-GitHub').data;
-    my $issuesd = $github.issues.show(repo => 'fayland/perl6-WebService-GitHub').data;
+    my $issues = $gh.show(repo => 'raku-community-modules/WebService-GitHub').data;
+    my $issuesd = $github.issues.show(repo => 'raku-community-modules/WebService-GitHub').data;
     cmp-ok $issues.elems, ">", 0, "Non-null number of issues";
     cmp-ok $issuesd.elems, ">", 0, "Non-null number of issues - from \$github.issues";
-    my $first-issue = $gh.single-issue(repo => 'fayland/perl6-WebService-GitHub', issue => 1).data;
-    my $first-issued = $github.issues.single-issue(repo => 'fayland/perl6-WebService-GitHub', issue => 1).data;
+    my $first-issue = $gh.single-issue(repo => 'raku-community-modules/WebService-GitHub', issue => 1).data;
+    my $first-issued = $github.issues.single-issue(repo => 'raku-community-modules/WebService-GitHub', issue => 1).data;
     is $first-issue<created_at>, "2015-10-26T19:45:45Z", "First issue OK";
     is $first-issued<created_at>, "2015-10-26T19:45:45Z", "First issue OK - from \$github.issues";
     my @all-issues = $gh.all-issues('JJ/perl6em');

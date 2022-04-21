@@ -1,4 +1,4 @@
-# perl6-WebService-GitHub
+# WebService-GitHub
 
 
 *ALPHA STAGE, SUBJECT TO CHANGE*
@@ -55,7 +55,7 @@ UTC by default, [Doc](https://developer.github.com/v3/#timezones)
 
  Builds the object with a particular role
 
-```perl6
+```raku
 my $gh = WebService::GitHub.new(
     with => ('Debug')
 );
@@ -91,7 +91,7 @@ Some of them are, or will be, included in the `examples` directory.
 
 #### get user info
 
-```perl6
+```raku
 my $gh = WebService::GitHub.new;
 my $user = $gh.request('/users/fayland').data;
 say $user<name>;
@@ -99,12 +99,12 @@ say $user<name>;
 
 #### search repositories
 
-```perl6
+```raku
 use WebService::GitHub::Search;
 
 my $search = WebService::GitHub::Search.new;
 my $data = $search.repositories({
-    :q<perl6>,
+    :q<raku>,
     :sort<stars>,
     :order<desc>
 }).data;
@@ -116,7 +116,7 @@ my $data = $search.repositories({
 
 [examples/create_access_token.pl](examples/create_access_token.pl)
 
-```perl6
+```raku
 use WebService::GitHub::OAuth;
 
 my $gh = WebService::GitHub::OAuth.new(
@@ -135,7 +135,7 @@ say $auth<token>;
 
 #### create a gist
 
-```perl6
+```raku
 use WebService::GitHub::Gist;
 
 my $gist = WebService::GitHub::Gist.new(
@@ -143,7 +143,7 @@ my $gist = WebService::GitHub::Gist.new(
 );
 
 my $data = $gist.create_gist({
-    description => 'Test from perl6 WebService::GitHub::Gist',
+    description => 'Test from WebService::GitHub::Gist',
     public => True,
     files => {
         'test.txt' => {
@@ -156,7 +156,7 @@ say $data<url>;
 
 #### update gist
 
-```perl6
+```raku
 $data = $gist.update_gist($id, {
     files => {
         "test_another.txt" => {
@@ -168,7 +168,7 @@ $data = $gist.update_gist($id, {
 
 #### delete gist
 
-```perl6
+```raku
 $res = $gist.delete_gist($id);
 say 'Deleted' if $res.is-success;
 ```

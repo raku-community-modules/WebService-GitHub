@@ -30,7 +30,7 @@ role WebService::GitHub::Role {
     has WebService::GitHub::AppAuth $!app-auth is built;
     has $!install-id is built;
 
-    has $.useragent = 'perl6-WebService-GitHub/0.1.0';
+    has $.useragent = 'Raku-WebService-GitHub';
     has $.ua = HTTP::UserAgent.new;
 
     has $.cache = Cache::LRU.new(size => 200);

@@ -19,7 +19,9 @@
     "HTTP::UserAgent:ver<1.1.51>:auth<github:sergot>",
     "JSON::Fast:ver<0.17>:auth<cpan:TIMOTIMO>",
     "Cache::LRU:ver<0.1.0>",
-    "Subset::Helper:ver<1.001002>:auth<zef:raku-community-modules>"
+    "Subset::Helper:ver<1.001002>:auth<zef:raku-community-modules>",
+    "OO::Monitors:ver<1.1.1>",
+    "JSON::JWT:ver<1.1.1>:auth<zef:raku-community-modules>"
   ],
   "test-depends": [
     "Test::META:ver<0.0.17>:auth<github:jonathanstowe>:api<1.0>"

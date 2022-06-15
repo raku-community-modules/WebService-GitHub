@@ -135,9 +135,11 @@ role WebService::GitHub::Role {
             # $request.header.field(
             #     If-None-Match => $cached_res.field('ETag').Str
             # );
-            $request.header.field(
-                    If-Modified-Since => $cached_res.field('Last-Modified').Str
-                    );
+            with $cached_res.field('Last-Modified') {
+                $request.header.field(
+                        If-Modified-Since => $_.Str
+                        );
+            }
 
             my $res = $.ua.request($request);
             if $res.code == 304 {

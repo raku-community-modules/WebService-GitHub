@@ -16,7 +16,7 @@
   "depends": [
     "MIME::Base64:ver<1.2.3>:auth<zef:raku-community-modules>",
     "URI:ver<0.3.5>",
-    "HTTP::UserAgent:ver<1.1.51>:auth<github:sergot>",
+    "HTTP::Tiny:ver<0.2.5>:auth<zef:jjatria>",
     "JSON::Fast:ver<0.17>:auth<cpan:TIMOTIMO>",
     "Cache::LRU:ver<0.1.0>",
     "Subset::Helper:ver<1.001002>:auth<zef:raku-community-modules>",

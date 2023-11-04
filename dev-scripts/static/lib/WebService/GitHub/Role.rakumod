@@ -1,13 +1,11 @@
 use v6;
 
-use URI;
 use URI::Escape;
 use MIME::Base64;
 use JSON::Fast;
 # from-json
 use Cache::LRU;
-use HTTP::Request;
-use HTTP::UserAgent;
+use HTTP::Tiny;
 use WebService::GitHub::Response;
 use WebService::GitHub::AppAuth;
 
@@ -31,7 +29,7 @@ role WebService::GitHub::Role {
     has $!install-id is built;
 
     has $.useragent = 'Raku-WebService-GitHub';
-    has $.ua = HTTP::UserAgent.new;
+    has $.ht = HTTP::Tiny.new;
 
     has $.cache = Cache::LRU.new(size => 200);
 
@@ -57,7 +55,7 @@ role WebService::GitHub::Role {
         }
     }
     
-    method request(Str $path, $method= 'GET', :%data is copy) {
+    method request(Str $path, $method is copy = 'GET', :%data is copy) {
         my $url = $.endpoint ~ $path;
         if ($method eq 'GET') {
             %data<per_page> = $.per_page if $.per_page.defined;
@@ -69,53 +67,48 @@ role WebService::GitHub::Role {
             }).join('&') if %data.elems;
         }
 
-        my $uri = URI.new($url);
-        my $request = HTTP::Request.new(|($method => $uri));
-        $request.header.field(User-Agent => $.useragent);
-        with $.media-type {
-            $request.header.field(Accept => $.media-type);
+        my %headers;
+        my $body;
+        %headers<User-Agent> = $!useragent;
+        with $!media-type {
+            %headers<Accept> = $!media-type;
         } else {
-            $request.header.field(Accept => 'application/vnd.github.v3+json');
+            %headers<Accept> = 'application/vnd.github.v3+json';
         }
 
-        with $.time-zone {
-            $request.header.field(
-                    Time-Zone => $.time-zone
-                    );
+        with $!time-zone {
+            %headers<Time-Zone> = $!time-zone;
         }
 
         if $!auth-login.defined && $!auth-token.defined {
-            $request.header.field(
-                Authorization => "Basic " ~ MIME::Base64.encode-str("{ $!auth-login }:{ $!auth-token }")
-            );
+            %headers<Authorization> = "Basic " ~ MIME::Base64.encode-str("{ $!auth-login }:{ $!auth-token }");
         } elsif $!pat {
-            $request.header.field(
-                Authorization => "token " ~ $!pat
-            );
+            %headers<Authorization> = "token " ~ $!pat;
         } elsif $!install-id {
-            $request.header.field(
-                Authorization => $!app-auth.get-installation-auth($!install-id)
-            );
+            %headers<Authorization> = $!app-auth.get-installation-auth($!install-id);
         }
 
         if ($method ne 'GET' and %data) {
-            $request.content = to-json(%data).encode;
-            $request.header.field(Content-Length => $request.content.bytes.Str);
+            $body = to-json(%data).encode;
+            %headers<Content-Length> = $body.bytes.Str;
         }
 
-        $request = $.prepare_request($request);
-        my $res = self._make_request($request);
-        $res = $.handle_response($res);
+        $.prepare_request($method, $url, %headers, $body);
+        my %res = self!make_request($method, $url, %headers, $body);
+        $.handle_response(%res);
 
         my $ghres = WebService::GitHub::Response.new(
-                raw => $res,
-                auto_pagination => $.auto_pagination,
+                raw => %res,
+                auto_pagination => $!auto_pagination,
                 );
 
-        if (!$ghres.is-success && $ghres.data<message>) {
-            my $message = $ghres.data<message>;
+        if !$ghres.is-success {
+            my $message = "";
+            if $ghres.data<message> {
+                $message ~= $ghres.data<message>;
+            }
             my $errors = $ghres.data<errors>;
-            if ($errors[0]{"message"}) {
+            if $errors[0]{"message"} {
                 $message = $message ~ ' - ' ~ $errors[0]{"message"};
             }
             X::WebService::GitHub.new(reason => $message).throw;
@@ -124,43 +117,37 @@ role WebService::GitHub::Role {
         return $ghres;
     }
 
-    method _make_request($request) {
+    method !make_request($method, $url, %headers, $body) {
         ## only support GET
-        if $request.method ne 'GET' {
-            return $.ua.request($request);
+        if $method ne 'GET' {
+            return $!ht.request($method, $url, :%headers, |(:content($body) with $body));
         }
 
-        my $cached_res = $.cache.get($request.file);
+        my $cached_res = $!cache.get($url);
         if $cached_res {
-            # $request.header.field(
-            #     If-None-Match => $cached_res.field('ETag').Str
-            # );
-            with $cached_res.field('Last-Modified') {
-                $request.header.field(
-                        If-Modified-Since => $_.Str
-                        );
+            # %headers<If-None-Match> = %$cached_res<etag>;
+            with $cached_res<headers><last-modified> {
+                %headers<If-Modified-Since> = $_.Str;
             }
 
-            my $res = $.ua.request($request);
-            if $res.code == 304 {
-                return $cached_res;
+            my %res = $!ht.request($method, $url, :%headers, |(:content($body) with $body));
+            if %res<status> == 304 {
+                return %$cached_res;
             }
 
-            $.cache.set($request.file, $res);
-            return $res;
+            $!cache.set($url, %res);
+            return %res;
         } else {
-            my $res = $.ua.request($request);
-            $.cache.set($request.file, $res);
-            return $res;
+            my %res = $!ht.request($method, $url, :%headers, |(:content($body) with $body));
+            $!cache.set($url, %res);
+            return %res;
         }
     }
 
     # for role override
-    method prepare_request($request) {
-        return $request
+    method prepare_request($method is rw, $url is rw, %headers, $body is rw) {
     }
-    method handle_response($response) {
-        return $response
+    method handle_response(%response) {
     }
 
     method rate-limit-remaining(--> Str)  {

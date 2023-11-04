@@ -3,11 +3,11 @@ unit monitor WebService::GitHub::AppAuth;
 
 use JSON::JWT;
 use JSON::Fast;
-use HTTP::UserAgent;
+use HTTP::Tiny;
 
 has $!app-id is built is required;
 has $!pem is built;
-has $!ua is built = HTTP::UserAgent.new;
+has $!ht is built = HTTP::Tiny.new;
 has $!useragent is built = 'perl6-WebService-GitHub/0.1.0';
 
 submethod TWEAK(IO::Path :$pem-file) {
@@ -34,13 +34,15 @@ method !get-app-auth() {
 }
 
 method list-installations() {
-    my $resp = $!ua.get: "https://api.github.com/app/installations",
-        User-Agent    => $!useragent,
-        Authorization => self!get-app-auth(),
-        Accept        => "application/vnd.github.v3+json",
+    my $resp = $!ht.get: "https://api.github.com/app/installations",
+        headers => {
+            User-Agent    => $!useragent,
+            Authorization => self!get-app-auth(),
+            Accept        => "application/vnd.github.v3+json",
+        }
     ;
-    if $resp.is-success {
-        return from-json($resp.content);
+    if $resp<success> {
+        return from-json($resp<content>.decode);
     }
 }
 
@@ -52,13 +54,15 @@ method get-installation-token($inst-id) {
         }
     }
     without %cache{$inst-id} {
-        my $resp = $!ua.post: "https://api.github.com/app/installations/$inst-id/access_tokens", {},
-            User-Agent    => $!useragent,
-            Authorization => self!get-app-auth(),
-            Accept        => "application/vnd.github.v3+json",
+        my $resp = $!ht.post: "https://api.github.com/app/installations/$inst-id/access_tokens",
+            headers => {
+                User-Agent    => $!useragent,
+                Authorization => self!get-app-auth(),
+                Accept        => "application/vnd.github.v3+json",
+            }
         ;
-        if $resp.is-success {
-            my $body = from-json($resp.content);
+        if $resp<success> {
+            my $body = from-json($resp<content>.decode);
             %cache{$inst-id} = {
                 token   => $body<token>,
                 timeout => DateTime.new($body<expires_at>).earlier(:5minutes),

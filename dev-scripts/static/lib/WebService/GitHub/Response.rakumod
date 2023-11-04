@@ -4,17 +4,17 @@ use JSON::Fast;
 # from-json
 
 class WebService::GitHub::Response {
-    has $.raw;
+    has %.raw;
 
     method data {
-        from-json($.raw.content);
+        from-json(%.raw<content>.decode);
     }
 
     method header(Str $field) {
-        $!raw.field($field).Str
+        %!raw<headers>{$field.lc}
     }
     method is-success {
-        $!raw.is-success
+        %!raw<success>
     }
 
     submethod get-link-header($rel) {

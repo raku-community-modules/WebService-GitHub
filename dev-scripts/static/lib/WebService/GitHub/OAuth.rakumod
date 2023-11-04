@@ -3,7 +3,7 @@ unit monitor WebService::GitHub::OAuth;
 
 use JSON::JWT;
 use JSON::Fast;
-use HTTP::UserAgent;
+use HTTP::Tiny;
 use URI::Escape;
 
 has $!client-id is built is required;
@@ -11,7 +11,7 @@ has $!client-secret is built is required;
 has $!redirect-url is built is required;
 has $!allow-signups is built = False;
 has $!pem is built;
-has $!ua is built = HTTP::UserAgent.new;
+has $!ht is built = HTTP::Tiny.new;
 has $!useragent is built = 'perl6-WebService-GitHub/0.1.0';
 
 # See https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/generating-a-user-access-token-for-a-github-app#using-the-web-application-flow-to-generate-a-user-access-token
@@ -30,12 +30,14 @@ method step-two($step-one-state, $code, $state) {
         ~ "?client_id=" ~ uri-escape($!client-id)
         ~ "&client_secret=" ~ uri-escape($!client-secret)
         ~ "&code=" ~ uri-escape($code);
-    my $resp = $!ua.post: $uri, {},
-        User-Agent    => $!useragent,
-        Accept        => "application/vnd.github.v3+json",
+    my $resp = $!ht.post: $uri,
+        headers => {
+            User-Agent    => $!useragent,
+            Accept        => "application/vnd.github.v3+json",
+        }
     ;
-    if $resp.is-success {
-        my $body = from-json($resp.decoded-content);
+    if $resp<success> {
+        my $body = from-json($resp<content>.decode);
         return $body<token>;
     }
 }

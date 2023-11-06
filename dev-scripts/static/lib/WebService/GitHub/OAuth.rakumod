@@ -38,7 +38,13 @@ method step-two($step-one-state, $code, $state) {
     ;
     if $resp<success> {
         my $body = from-json($resp<content>.decode);
-        return $body<token>;
+        if $body<error> {
+            die "Couldn't retrieve access token. GitHub error code: " ~ $body<error>;
+        }
+        return $body<access_token>;
+    }
+    else {
+        die "Couldn't retrieve access token. HTTP Status: " ~ $resp<status>;
     }
 }
 

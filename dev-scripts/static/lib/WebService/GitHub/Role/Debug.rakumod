@@ -20,7 +20,7 @@ role WebService::GitHub::Role::Debug {
         note "<<< Status: %response<status>";
         note "<<< Reason: %response<reason>";
         note ">>> Headers:";
-        for %headers.kv -> $k, $v {
+        for %response<headers>.kv -> $k, $v {
             if $v ~~ List {
                 note "<<<   $k: " ~ $v.join(", ");
             }

@@ -11,7 +11,6 @@ my $gh = WebService::GitHub.new(
 
 my $res = $gh.request('/users/fayland');
 my $data = $res.data;
-diag $data.perl;
 is $data<login>, 'fayland';
 
 done-testing;

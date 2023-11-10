@@ -6,7 +6,7 @@ use JSON::Fast;
 use Cro::WebApp::Template::Repository;
 use PathTools;
 
-my $version = '0.2.2';
+my $version = '1.0.0';
 
 my $apij = from-json $*PROGRAM.add('../api.json').resolve.slurp;
 my $api = OpenAPI::Model.from-json($*PROGRAM.add('../api.json').resolve.slurp);

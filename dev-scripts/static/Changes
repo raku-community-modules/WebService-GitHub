@@ -1,0 +1,25 @@
+Revision history for WebService::GitHub
+
+1.0.0
+
+- Moved from HTTP::UserAgent to HTTP::Tiny. This causes an incompatibility for
+  users overriding WebService::GitHub::Role as the signature of two overridable
+  methods has changed:
+
+      method prepare_request($method is rw, $url is rw, %headers, $body is rw)
+      method handle_response(%response)
+
+- Add WebService::GitHub::OAuth to help with OAuth authentication.
+
+0.2.2
+
+- Fix installation. Two dependencies in META6.json were missing.
+
+0.2.1
+
+- Add some documentation.
+
+0.2.0
+
+- First release on the zef ecosystem.
+- First release to automatically generate code for the entire GitHub API.

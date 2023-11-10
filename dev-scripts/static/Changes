@@ -1,5 +1,11 @@
 Revision history for WebService::GitHub
 
+1.0.1
+
+- Fix tests.
+- Move tests depending o internet access to xt/.
+- Get WebService::GitHub::Role::Debug working.
+
 1.0.0
 
 - Moved from HTTP::UserAgent to HTTP::Tiny. This causes an incompatibility for

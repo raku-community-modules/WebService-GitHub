@@ -17,6 +17,7 @@
     "MIME::Base64:ver<1.2.3>:auth<zef:raku-community-modules>",
     "URI:ver<0.3.5>",
     "HTTP::Tiny:ver<0.2.5>:auth<zef:jjatria>",
+    "IO::Socket::SSL:ver<0.0.3>:auth<github:sergot>",
     "JSON::Fast:ver<0.17>:auth<cpan:TIMOTIMO>",
     "Cache::LRU:ver<0.1.0>",
     "Subset::Helper:ver<1.001002>:auth<zef:raku-community-modules>",
